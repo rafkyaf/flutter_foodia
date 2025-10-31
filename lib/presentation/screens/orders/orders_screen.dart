@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/order_provider.dart';
+import '../../../providers/cart_provider.dart'; // ✅ tambahkan ini
 import '../../../data/models/order_model.dart';
-
-enum OrderTab { all, onDelivery, completed }
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -14,391 +13,391 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  String selectedTab = "On Delivery";
   int _selectedIndex = 1;
 
-  @override
-  void initState() {
-    super.initState();
-    // Fetch orders when screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<OrderProvider>().fetchOrdersByStatus('ON_DELIVERY');
-      }
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
     });
-  }
 
-  void _onNavTapped(int index) {
-    setState(() => _selectedIndex = index);
-    // You can integrate navigation logic here if needed
-  }
-
-  void _onTabChanged(String tab) {
-    setState(() => selectedTab = tab);
-    
-    // Convert tab name to status format
-    String status = tab.toUpperCase().replaceAll(' ', '_');
-    if (tab == 'All') {
-      context.read<OrderProvider>().fetchOrders();
-    } else {
-      context.read<OrderProvider>().fetchOrdersByStatus(status);
-    }
+    // Navigasi antar halaman sesuai kebutuhan
+    if (index == 0) Navigator.pushNamed(context, '/home');
+    if (index == 1) Navigator.pushNamed(context, '/orders');
+    if (index == 2) Navigator.pushNamed(context, '/offers');
+    if (index == 3) Navigator.pushNamed(context, '/profile');
   }
 
   @override
   Widget build(BuildContext context) {
-    final orderProvider = context.watch<OrderProvider>();
-    
-    Widget content;
-    if (orderProvider.isLoading) {
-      content = const Center(child: CircularProgressIndicator());
-    } else if (orderProvider.error != null) {
-      content = Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Error loading orders',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => _onTabChanged(selectedTab),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      final orders = orderProvider.orders;
-      content = Column(
-        children: [
-          // Search box
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search beverages or foods',
-                prefixIcon: const Icon(Icons.search),
-                hintStyle: GoogleFonts.poppins(fontSize: 14),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.all(0),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(50),
-                    borderSide: BorderSide.none),
-              ),
-            ),
-          ),
-
-          // Tabs (left aligned)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: ['All', 'On Delivery', 'Completed']
-                  .map((tab) => Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (tab == 'On Delivery' && selectedTab == tab)
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  margin: const EdgeInsets.only(right: 6),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.blue,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              Text(tab,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: selectedTab == tab
-                                        ? Colors.white
-                                        : Colors.black54,
-                                  )),
-                            ],
-                          ),
-                          selected: selectedTab == tab,
-                          onSelected: (_) => _onTabChanged(tab),
-                          selectedColor: Colors.blueAccent,
-                          backgroundColor: Colors.grey.shade200,
-                          labelPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Order List
-          Expanded(
-            child: ListView.builder(
-              itemCount: orders.length,
-              padding: const EdgeInsets.only(bottom: 16),
-              itemBuilder: (context, index) {
-                final order = orders[index];
-                return Column(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.08),
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Order ID ${order.id}",
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600, fontSize: 14),
-                                ),
-                                Text(
-                                  order.status == 'ON_DELIVERY' 
-                                      ? 'Track Location'
-                                      : 'View Details',
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      color: Colors.blueAccent,
-                                      fontWeight: FontWeight.w500)
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-
-                            // Status
-                            Row(
-                              children: [
-                                Icon(Icons.circle,
-                                    size: 10,
-                                    color: order.status == 'COMPLETED'
-                                        ? Colors.green
-                                        : Colors.red),
-                                const SizedBox(width: 8),
-                                Text(order.status,
-                                    style: GoogleFonts.poppins(
-                                        color: order.status == 'COMPLETED'
-                                            ? Colors.green
-                                            : Colors.red,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            // Item list
-                            Column(
-                              children: order.items.map((item) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Row(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          item.image,
-                                          height: 56,
-                                          width: 56,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(item.name,
-                                                style: GoogleFonts.poppins(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.blue[800])),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                    "\$${item.price.toStringAsFixed(2)}",
-                                                    style: GoogleFonts.poppins(
-                                                        fontWeight: FontWeight.w600,
-                                                        color: Colors.black87)),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  "\$${item.oldPrice}",
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                    decoration:
-                                                        TextDecoration.lineThrough,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Text('x${item.quantity}',
-                                          style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Colors.black54,
-                                              fontWeight: FontWeight.w500)),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    }
+    // ✅ Ambil data cart dari Provider (agar badge keranjang dinamis)
+    final cartProvider = Provider.of<CartProvider>(context);
+    final cartCount = cartProvider.items.length;
 
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Your Orders',
-            style: GoogleFonts.poppins(
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
-            )),
-        centerTitle: false,
+        title: const Text(
+          "Your Orders",
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           Stack(
-            alignment: Alignment.topRight,
             children: [
               IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.shopping_cart_outlined,
-                      color: Colors.black)),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                      color: Colors.red, shape: BoxShape.circle),
-                  child: const Text(
-                    '5',
-                    style: TextStyle(fontSize: 10, color: Colors.white),
+                icon: const Icon(Icons.shopping_cart_outlined,
+                    color: Colors.black87),
+                onPressed: () {
+                  // ✅ Arahkan ke halaman Cart
+                  Navigator.pushNamed(context, '/cart');
+                },
+              ),
+              if (cartCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      cartCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              )
             ],
           ),
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.filter_list, color: Colors.black)),
         ],
       ),
-      body: content,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Color.fromRGBO(128, 128, 128, 0.2),
-              spreadRadius: 1,
-              blurRadius: 8,
-              offset: Offset(0, -2),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🔍 Search Bar
+            TextField(
+              decoration: InputDecoration(
+                hintText: "Search beverages or foods",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.grey.shade200,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 🔘 Filter Buttons
+            // ignore: prefer_const_constructors
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: const [
+                FilterButton(text: "All", selected: false),
+                FilterButton(text: "On Delivery", selected: true),
+                FilterButton(text: "Completed", selected: false),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // 🚚 Order in Delivery
+            // ignore: prefer_const_constructors
+            OrderCard(
+              orderId: "#0012345",
+              status: "ON DELIVERY",
+              statusColor: Colors.red,
+              statusAction: "Track Location",
+              items: const [
+                OrderItem(
+                  image: "assets/images/coffe mocha.png",
+                  title: "Coffee Mocha / White Mocha",
+                  price: 5.0,
+                  oldPrice: 8.9,
+                  quantity: 2,
+                ),
+                OrderItem(
+                  image: "assets/images/chicken wings.png",
+                  title: "Chicken Wings Spicy",
+                  price: 5.0,
+                  oldPrice: 8.9,
+                  quantity: 2,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // ✅ Order Done
+            // ignore: prefer_const_constructors
+            OrderCard(
+              orderId: "#0012345",
+              status: "DONE",
+              statusColor: Colors.green,
+              statusAction: "View Details",
+              items: const [
+                OrderItem(
+                  image: "assets/images/vs cream cb.png",
+                  title: "Vanilla Sweet Cream Cold",
+                  price: 5.0,
+                  oldPrice: 8.9,
+                  quantity: 2,
+                ),
+                OrderItem(
+                  image: "assets/images/mily cream.png",
+                  title: "Milky Cream Latte",
+                  price: 5.0,
+                  oldPrice: 8.9,
+                  quantity: 2,
+                ),
+                OrderItem(
+                  image: "assets/images/food1.png",
+                  title: "BBQ Crispy Wings",
+                  price: 5.0,
+                  oldPrice: 8.9,
+                  quantity: 2,
+                ),
+              ],
             ),
           ],
         ),
-        child: SafeArea(
-          child: Container(
-            height: 70,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
+      ),
+
+      // 🔻 Bottom Navigation Bar
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.percent),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: '',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FilterButton extends StatelessWidget {
+  final String text;
+  final bool selected;
+
+  const FilterButton({required this.text, required this.selected, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: selected ? Colors.blue.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: selected ? Colors.blue : Colors.grey.shade300,
+        ),
+      ),
+      child: Row(
+        children: [
+          if (selected)
+            Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+              ),
+            ),
+          Text(
+            text,
+            style: TextStyle(
+              color: selected ? Colors.blue : Colors.grey.shade600,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class OrderCard extends StatelessWidget {
+  final String orderId;
+  final String status;
+  final Color statusColor;
+  final String statusAction;
+  final List<OrderItem> items;
+
+  const OrderCard({
+    required this.orderId,
+    required this.status,
+    required this.statusColor,
+    required this.statusAction,
+    required this.items,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0.4,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildBottomNavItem(Icons.notifications_outlined, 0),
-                _buildBottomNavItem(Icons.receipt_long_outlined, 1),
-                const SizedBox(width: 60), // Space for center button
-                _buildBottomNavItem(Icons.message_outlined, 3),
-                _buildBottomNavItem(Icons.person_outline, 4),
+                Text(
+                  "Order ID $orderId",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {},
+                  child: Text(
+                    statusAction,
+                    style: const TextStyle(color: Colors.blue),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  status,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Column(
+              children: items.map((item) => item).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class OrderItem extends StatelessWidget {
+  final String image;
+  final String title;
+  final double price;
+  final double oldPrice;
+  final int quantity;
+
+  const OrderItem({
+    required this.image,
+    required this.title,
+    required this.price,
+    required this.oldPrice,
+    required this.quantity,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              image,
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      "\$${price.toStringAsFixed(1)}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "\$${oldPrice.toStringAsFixed(1)}",
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-        ),
-      ),
-      floatingActionButton: Container(
-        width: 60,
-        height: 60,
-        decoration: const BoxDecoration(
-          color: Colors.blue,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Color.fromRGBO(33, 150, 243, 0.3),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: IconButton(
-          icon: const Icon(
-            Icons.home_outlined,
-            color: Colors.white,
-            size: 28,
-          ),
-          onPressed: () => _onNavTapped(2),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  Widget _buildBottomNavItem(IconData icon, int index) {
-    final isSelected = _selectedIndex == index;
-    return GestureDetector(
-      onTap: () => _onNavTapped(index),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey[100],
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: isSelected ? Colors.white : Colors.grey[600],
-          size: 24,
-        ),
+          Text("x$quantity"),
+        ],
       ),
     );
   }
