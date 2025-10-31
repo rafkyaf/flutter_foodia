@@ -5,7 +5,7 @@ class OrderRepositoryImpl implements OrderRepository {
   final List<Order> _orders = [
     Order(
       id: '#0012345',
-      status: 'ON DELIVERY',
+      status: 'ON_DELIVERY',
       createdAt: DateTime.now(),
       items: [
         OrderItem(
@@ -26,7 +26,7 @@ class OrderRepositoryImpl implements OrderRepository {
     ),
     Order(
       id: '#0012346',
-      status: 'DONE',
+      status: 'COMPLETED',
       createdAt: DateTime.now().subtract(const Duration(hours: 2)),
       items: [
         OrderItem(

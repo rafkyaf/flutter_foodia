@@ -14,6 +14,17 @@ class OrderProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  // Get current orders (orders in progress)
+  List<Order> get currentOrders => _orders
+      .where((order) => order.status != 'COMPLETED' && order.status != 'CANCELLED')
+      .toList();
+
+  // Get order history (completed orders)
+  List<Order> get orderHistory => _orders
+      .where((order) => order.status == 'COMPLETED' || order.status == 'CANCELLED')
+      .toList()
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
   Future<void> fetchOrders() async {
     _isLoading = true;
     _error = null;
