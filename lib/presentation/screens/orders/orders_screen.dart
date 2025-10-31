@@ -20,12 +20,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch orders when screen loads
+    // Fetch all orders when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<OrderProvider>().fetchOrdersByStatus('ON_DELIVERY');
+        _refreshOrders();
       }
     });
+  }
+
+  Future<void> _refreshOrders() async {
+    if (selectedTab == 'All') {
+      await context.read<OrderProvider>().fetchOrders();
+    } else {
+      String status = selectedTab.toUpperCase().replaceAll(' ', '_');
+      await context.read<OrderProvider>().fetchOrdersByStatus(status);
+    }
   }
 
   void _onNavTapped(int index) {
@@ -35,14 +44,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   void _onTabChanged(String tab) {
     setState(() => selectedTab = tab);
-    
-    // Convert tab name to status format
-    String status = tab.toUpperCase().replaceAll(' ', '_');
-    if (tab == 'All') {
-      context.read<OrderProvider>().fetchOrders();
-    } else {
-      context.read<OrderProvider>().fetchOrdersByStatus(status);
-    }
+    _refreshOrders();
   }
 
   @override
@@ -140,7 +142,39 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
           // Order List
           Expanded(
-            child: ListView.builder(
+            child: RefreshIndicator(
+              onRefresh: _refreshOrders,
+              child: orders.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No orders found',
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your orders will appear here',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
               itemCount: orders.length,
               padding: const EdgeInsets.only(bottom: 16),
               itemBuilder: (context, index) {
@@ -153,11 +187,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
+                        border: order.status == 'ON_DELIVERY'
+                            ? Border.all(color: Colors.orange.shade200, width: 2)
+                            : null,
+                        boxShadow: [
                           BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.08),
+                            color: order.status == 'ON_DELIVERY'
+                                ? const Color.fromRGBO(255, 152, 0, 0.15)
+                                : const Color.fromRGBO(0, 0, 0, 0.08),
                             blurRadius: 6,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           )
                         ],
                       ),
@@ -171,10 +210,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  "Order ID ${order.id}",
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600, fontSize: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Order ID ${order.id}",
+                                        style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600, fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _formatOrderDate(order.createdAt),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 Text(
                                   order.status == 'ON_DELIVERY' 
@@ -187,24 +241,55 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 10),
 
-                            // Status
+                            // Status and order info
                             Row(
                               children: [
-                                Icon(Icons.circle,
-                                    size: 10,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
                                     color: order.status == 'COMPLETED'
-                                        ? Colors.green
-                                        : Colors.red),
-                                const SizedBox(width: 8),
-                                Text(order.status,
-                                    style: GoogleFonts.poppins(
+                                        ? Colors.green.shade50
+                                        : Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        order.status == 'COMPLETED'
+                                            ? Icons.check_circle
+                                            : Icons.local_shipping_outlined,
+                                        size: 14,
                                         color: order.status == 'COMPLETED'
-                                            ? Colors.green
-                                            : Colors.red,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500)),
+                                            ? Colors.green.shade700
+                                            : Colors.orange.shade700,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        order.status == 'COMPLETED'
+                                            ? 'Completed'
+                                            : 'On Delivery',
+                                        style: GoogleFonts.poppins(
+                                          color: order.status == 'COMPLETED'
+                                              ? Colors.green.shade700
+                                              : Colors.orange.shade700,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  '${order.totalItems} items',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
                               ],
                             ),
 
@@ -224,6 +309,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                           height: 56,
                                           width: 56,
                                           fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              height: 56,
+                                              width: 56,
+                                              color: Colors.grey[200],
+                                              child: Icon(
+                                                Icons.fastfood,
+                                                color: Colors.grey[400],
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -245,15 +341,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                                         fontWeight: FontWeight.w600,
                                                         color: Colors.black87)),
                                                 const SizedBox(width: 8),
-                                                Text(
-                                                  "\$${item.oldPrice}",
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                    decoration:
-                                                        TextDecoration.lineThrough,
+                                                if (item.oldPrice != item.price)
+                                                  Text(
+                                                    "\$${item.oldPrice.toStringAsFixed(2)}",
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 12,
+                                                      color: Colors.grey,
+                                                      decoration:
+                                                          TextDecoration.lineThrough,
+                                                    ),
                                                   ),
-                                                ),
                                               ],
                                             ),
                                           ],
@@ -269,6 +366,31 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 );
                               }).toList(),
                             ),
+
+                            const Divider(height: 24),
+
+                            // Total amount
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Total Amount',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${order.totalAmount.toStringAsFixed(2)}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue[700],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -277,6 +399,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ],
                 );
               },
+                    ),
             ),
           ),
         ],
@@ -292,7 +415,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Your Orders',
+        title: Text('Your Order',
             style: GoogleFonts.poppins(
               color: Colors.black87,
               fontWeight: FontWeight.w600,
@@ -401,5 +524,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ),
       ),
     );
+  }
+
+  String _formatOrderDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} minutes ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 }

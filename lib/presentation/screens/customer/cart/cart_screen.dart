@@ -253,9 +253,10 @@ class CartScreen extends StatelessWidget {
             quantity: item.qty,
           )).toList();
 
-      // Create new order
+      // Create new order with a realistic order ID
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
       final order = Order(
-        id: DateTime.now().toString(),
+        id: '#${timestamp.toString().substring(timestamp.toString().length - 7)}',
         items: orderItems,
         status: 'ON_DELIVERY',
         createdAt: DateTime.now(),
