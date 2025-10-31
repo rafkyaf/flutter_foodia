@@ -1,0 +1,3 @@
+import 'product_repository.dart';
+import '../data/models/product_model.dart';
+class MockProductRepository implements ProductRepository { @override Future<List<ProductModel>> fetchProducts() async { await Future.delayed(const Duration(milliseconds: 300)); return List.generate(10, (i) => ProductModel(id: 'p\$i', name: 'Product \$i', description: 'Tasty product \$i', price: 5.0 + i, imageUrl: 'https://picsum.photos/200?image=\$i')); } }

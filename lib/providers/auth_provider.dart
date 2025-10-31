@@ -1,0 +1,2 @@
+import 'package:flutter/material.dart';
+class AuthProvider extends ChangeNotifier { bool _loggedIn = false; bool get loggedIn => _loggedIn; Future<void> login(String email, String password) async { await Future.delayed(const Duration(milliseconds: 300)); _loggedIn = true; notifyListeners(); } void logout() { _loggedIn = false; notifyListeners(); } }

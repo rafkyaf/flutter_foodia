@@ -1,0 +1,2 @@
+import 'package:flutter/material.dart';
+class CategoryCard extends StatelessWidget { final String title; const CategoryCard({super.key, required this.title}); @override Widget build(BuildContext context) { return Container(width: 120, margin: const EdgeInsets.symmetric(horizontal: 8), decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(12),), child: Center(child: Text(title)),); } }
