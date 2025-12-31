@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 import 'signup_screen.dart';
 import 'forgot_password_phone_screen.dart';
 import '../../navigation/custom_page_route.dart';
@@ -16,10 +17,9 @@ class FoodiaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Foodia',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Roboto',
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       home: const LoginScreen(),
     );
   }
@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   _keepSignIn = value ?? false;
                                 });
                               },
-                              activeColor: const Color(0xFF4DB8E8),
+                              fillColor: WidgetStateProperty.all(const Color(0xFF4DB8E8)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),

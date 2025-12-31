@@ -15,16 +15,29 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   # Tambahan UI (opsional)
-  google_fonts: ^6.1.0
+  google_fonts: ^6.3.3
   flutter_svg: ^2.0.9
+  shared_preferences: ^2.0.15
+
+  # Charts
+  syncfusion_flutter_charts: ^32.1.20
 
   # Tambahan untuk video splash (jika kamu ingin pakai video)
   video_player: ^2.8.1
 
-dev_dependencies:
+  # URL launcher for opening Google Maps link
+  url_launcher: ^6.1.10
+
+  # Maps: OpenStreetMap via flutter_map (cross-platform) and LatLng helper
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  http: ^1.6.0
+
+  # Google Maps (mobile-only; optional)
+  google_maps_flutter: ^2.5.0
+
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true

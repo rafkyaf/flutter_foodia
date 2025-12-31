@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'presentation/screens/auth/role_selection_screen.dart';
 
+// Screens
+import 'presentation/screens/auth/role_selection_screen.dart';
+import 'presentation/screens/customer/cart/cart_screen.dart';
+import 'presentation/screens/payment/payment_screen.dart';
+
+// Core & Navigation
 import 'core/theme/app_theme.dart';
 import 'presentation/navigation/app_router.dart';
+
+// Providers & Repository
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/cart_provider.dart';
@@ -32,8 +39,19 @@ class MyApp extends StatelessWidget {
         title: 'Foodia',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+
+        // routing menggunakan AppRouter
         onGenerateRoute: AppRouter.generateRoute,
-        // route awal = splash screen
+
+        // Tambahan route manual agar Cart dan Payment bisa langsung diakses
+        routes: {
+          '/cart': (_) => const CartScreen(),
+          '/payment': (_) => const PaymentScreen(),
+        },
+
+        // route awal (misalnya splash screen)
         initialRoute: '/',
       ),
     );

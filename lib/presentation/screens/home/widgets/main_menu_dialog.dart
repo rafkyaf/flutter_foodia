@@ -142,7 +142,7 @@ class _MainMenuDialogState extends State<MainMenuDialog> {
             Expanded(
               child: ListView(
                 controller: controller,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20).copyWith(bottom: 24),
                 children: [
                   _buildMenuItem(
                     icon: Icons.favorite_border,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/constants/profile_images.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -94,7 +95,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 if (!item['isNew'])
                   BoxShadow(
                     // ignore: deprecated_member_use
-                    color: Colors.grey.withOpacity(0.15),
+                    color: Colors.grey.withAlpha((0.15 * 255).round()),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -132,34 +133,90 @@ class _NotificationScreenState extends State<NotificationScreen> {
         },
       ),
 
-      // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 3, // misalnya tab ke-4 (notifikasi)
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.percent_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: '',
-          ),
-        ],
+      // ✅ Floating Button di tengah (navigasi ke Home)
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blueAccent,
+        onPressed: () => Navigator.pushNamed(context, '/home'),
+        child: const Icon(Icons.home, color: Colors.white),
+      ),
+
+      // ✅ Bottom Navigation Bar mirip halaman utama
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 6,
+      child: SizedBox(
+        height: 64,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // 🔔 Notification
+            IconButton(
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/notification');
+                if (!mounted) return;
+                setState(() {});
+              },
+              icon: const Icon(Icons.notifications_none),
+            ),
+
+            // 🧾 Orders
+            IconButton(
+              onPressed: () => Navigator.pushNamed(context, '/orders'),
+              icon: const Icon(Icons.receipt_long_outlined),
+            ),
+
+            const SizedBox(width: 48), // jarak untuk FAB
+
+            // 💬 Messages dengan badge
+            Builder(builder: (ctx) {
+              final unreadMessages = ProfileImages.chatUsers.fold<int>(0, (sum, u) {
+                final v = u['unread'];
+                if (v == null) return sum;
+                return sum + (int.tryParse(v) ?? 0);
+              });
+              return Stack(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pushNamed(context, '/message'),
+                    icon: const Icon(Icons.message_outlined),
+                  ),
+                  if (unreadMessages > 0)
+                    Positioned(
+                      right: 6,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadMessages.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }),
+
+            // 👤 Profile
+            IconButton(
+              onPressed: () => Navigator.pushNamed(context, '/profile'),
+              icon: const Icon(Icons.person_outline),
+            ),
+          ],
+        ),
       ),
     );
   }

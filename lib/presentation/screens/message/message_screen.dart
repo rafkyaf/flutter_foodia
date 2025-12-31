@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/profile_images.dart';
+import 'chat_screen.dart';
 
 class ProfileImage extends StatelessWidget {
   final String imageUrl;
@@ -85,8 +86,6 @@ class ProfileImage extends StatelessWidget {
 class MessageScreen extends StatelessWidget {
   const MessageScreen({super.key});
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,18 +120,15 @@ class MessageScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black87),
-            onPressed: () {
-              // Add search functionality
-            },
+            onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: () {
-              // Add more options menu
-            },
+            onPressed: () {},
           ),
         ],
       ),
+
       body: Column(
         children: [
           // Search Bar
@@ -167,51 +163,54 @@ class MessageScreen extends StatelessWidget {
                 final user = ProfileImages.chatUsers[index];
                 return Padding(
                   padding: const EdgeInsets.only(right: 20),
-                  child: Column(
-                    children: [
-                      Stack(
-                        children: [
-                          ProfileImage(
-                            imageUrl: user['imageUrl']!,
-                            name: user['name']!,
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
+                  child: InkWell(
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(user: user))),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            ProfileImage(
+                              imageUrl: user['imageUrl']!,
+                              name: user['name']!,
+                            ),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        user['name']!.split(' ')[0],
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          user['name']!.split(' ')[0],
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
             ),
           ),
 
-          // Divider
           Divider(color: Colors.grey[200], thickness: 1),
 
-          // Messages List
+          // Message List
           Expanded(
             child: ListView.builder(
               itemCount: ProfileImages.chatUsers.length,
@@ -221,9 +220,7 @@ class MessageScreen extends StatelessWidget {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   child: InkWell(
-                    onTap: () {
-                      // Navigate to chat detail screen
-                    },
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(user: user))),
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
                       padding: const EdgeInsets.all(8),
@@ -286,20 +283,32 @@ class MessageScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  user['lastMessage']!,
-                                  style: GoogleFonts.poppins(
-                                    color: user['unread'] != null 
-                                        ? Colors.black87 
-                                        : Colors.grey[600],
-                                    fontSize: 13,
-                                    fontWeight: user['unread'] != null 
-                                        ? FontWeight.w500 
-                                        : FontWeight.normal,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.03), blurRadius: 4, offset: const Offset(0, 1))],
+                                        ),
+                                        child: Text(
+                                          user['lastMessage']!,
+                                          style: GoogleFonts.poppins(
+                                            color: user['unread'] != null ? Colors.black87 : Colors.grey[600],
+                                            fontSize: 13,
+                                            fontWeight: user['unread'] != null ? FontWeight.w500 : FontWeight.normal,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(user['time']!, style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
+                                  ],
                                 ),
                               ],
                             ),
@@ -314,13 +323,79 @@ class MessageScreen extends StatelessWidget {
           ),
         ],
       ),
+
+      // Floating button
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add new message
-        },
+        onPressed: () {},
         backgroundColor: Colors.blue[700],
         elevation: 2,
         child: const Icon(Icons.edit),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      // ⬇️ Navigasi bawah sama seperti di HomeScreen
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6,
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                onPressed: () async {
+                  await Navigator.pushNamed(context, '/notification');
+                },
+                icon: const Icon(Icons.notifications_none),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/orders'),
+                icon: const Icon(Icons.receipt_long),
+              ),
+              const SizedBox(width: 48),
+              // Message icon + badge
+              Builder(builder: (ctx) {
+                final unreadMessages = ProfileImages.chatUsers.fold<int>(0, (sum, u) {
+                  final v = u['unread'];
+                  if (v == null) return sum;
+                  return sum + (int.tryParse(v) ?? 0);
+                });
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.message_outlined),
+                    ),
+                    if (unreadMessages > 0)
+                      Positioned(
+                        right: 6,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            unreadMessages.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/profile'),
+                icon: const Icon(Icons.person_outline),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class CustomerProfileScreen extends StatelessWidget {
+class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
 
+  @override
+  State<CustomerProfileScreen> createState() => _CustomerProfileScreenState();
+}
+
+class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,6 +43,9 @@ class CustomerProfileScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(
+          bottom: kBottomNavigationBarHeight + 32,
+        ),
         child: Column(
           children: [
             // Profile Header with Image
@@ -240,36 +248,42 @@ class CustomerProfileScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 4, // Profile tab
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none),
-            label: '',
+      bottomNavigationBar: BottomAppBar(
+        elevation: 8,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: SizedBox(
+          height: kBottomNavigationBarHeight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/notification'),
+                icon: const Icon(Icons.notifications_none),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/orders'),
+                icon: const Icon(Icons.receipt_long),
+              ),
+              const SizedBox(width: 48), // space for FAB
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/message'),
+                icon: const Icon(Icons.message_outlined),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.person_outline, color: Colors.blue),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.email_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: '',
-          ),
-        ],
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
+        ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, '/home'),
+        child: const Icon(Icons.home),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -283,8 +297,8 @@ class CustomerProfileScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            // ignore: deprecated_member_use
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withAlpha(
+                25), // Changed from withOpacity(0.1) to withAlpha(25)
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(

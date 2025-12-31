@@ -13,7 +13,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _pages = [
     {
-      'image': 'assets/images/shop.png',
+      'image': 'assets/images/shop foodia.png',
       'title': 'Foodia',
       'desc':
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore',

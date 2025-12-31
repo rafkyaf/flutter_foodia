@@ -139,7 +139,7 @@ class RoleCard extends StatelessWidget {
           border: Border.all(color: Colors.grey[300]!, width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
+              color: Colors.grey.withAlpha((0.15 * 255).round()),
               spreadRadius: 2,
               blurRadius: 8,
               offset: const Offset(0, 4),

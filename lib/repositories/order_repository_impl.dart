@@ -10,14 +10,14 @@ class OrderRepositoryImpl implements OrderRepository {
       items: [
         OrderItem(
           name: 'Coffee Mocha / White Mocha',
-          image: 'https://i.imgur.com/hxS5v2Z.png',
+          image: "assets/images/chicken_wings.png",
           price: 5.0,
           oldPrice: 8.9,
           quantity: 2,
         ),
         OrderItem(
           name: 'Chicken Wings Spicy',
-          image: 'https://i.imgur.com/RmXyoGp.png',
+          image: "assets/images/chicken_wings.png",
           price: 5.0,
           oldPrice: 8.9,
           quantity: 2,
@@ -31,21 +31,21 @@ class OrderRepositoryImpl implements OrderRepository {
       items: [
         OrderItem(
           name: 'Vanilla Sweet Cream Cold',
-          image: 'https://i.imgur.com/DxtqENh.png',
+          image: "assets/images/chicken_wings.png",
           price: 5.0,
           oldPrice: 8.9,
           quantity: 2,
         ),
         OrderItem(
           name: 'Mily Cream Ice Coffee',
-          image: 'https://i.imgur.com/p3A0rK3.png',
+          image: "assets/images/chicken_wings.png",
           price: 5.0,
           oldPrice: 8.9,
           quantity: 2,
         ),
         OrderItem(
           name: 'Deluxe Burger Spicy',
-          image: 'https://i.imgur.com/IlJmQEU.png',
+          image: "assets/images/chicken_wings.png",
           price: 5.0,
           oldPrice: 8.9,
           quantity: 2,

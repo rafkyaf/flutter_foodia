@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/order_provider.dart';
-import '../../../providers/cart_provider.dart'; // ✅ tambahkan ini
+import '../../../providers/cart_provider.dart';
+import '../../../core/constants/profile_images.dart';
 import '../../../data/models/order_model.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -13,29 +14,13 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  int _selectedIndex = 1;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // Navigasi antar halaman sesuai kebutuhan
-    if (index == 0) Navigator.pushNamed(context, '/home');
-    if (index == 1) Navigator.pushNamed(context, '/orders');
-    if (index == 2) Navigator.pushNamed(context, '/offers');
-    if (index == 3) Navigator.pushNamed(context, '/profile');
-  }
-
   @override
   Widget build(BuildContext context) {
-    // ✅ Ambil data cart dari Provider (agar badge keranjang dinamis)
     final cartProvider = Provider.of<CartProvider>(context);
     final cartCount = cartProvider.items.length;
 
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -43,23 +28,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           "Your Orders",
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
           ),
         ),
+        centerTitle: true,
         actions: [
           Stack(
             children: [
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined,
                     color: Colors.black87),
-                onPressed: () {
-                  // ✅ Arahkan ke halaman Cart
-                  Navigator.pushNamed(context, '/cart');
-                },
+                onPressed: () => Navigator.pushNamed(context, '/cart'),
               ),
               if (cartCount > 0)
                 Positioned(
@@ -126,18 +109,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
             OrderCard(
               orderId: "#0012345",
               status: "ON DELIVERY",
-              statusColor: Colors.red,
+              statusColor: Colors.orange,
               statusAction: "Track Location",
               items: const [
                 OrderItem(
-                  image: "assets/images/coffe mocha.png",
+                  image: "assets/images/coffe_mocha.png",
                   title: "Coffee Mocha / White Mocha",
                   price: 5.0,
                   oldPrice: 8.9,
                   quantity: 2,
                 ),
                 OrderItem(
-                  image: "assets/images/chicken wings.png",
+                  image: "assets/images/chicken_wings.png",
                   title: "Chicken Wings Spicy",
                   price: 5.0,
                   oldPrice: 8.9,
@@ -183,31 +166,75 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ),
       ),
 
-      // 🔻 Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: '',
+      // ✅ Copy dari HomeScreen:
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, '/home'),
+        child: const Icon(Icons.home),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6,
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                onPressed: () async {
+                  await Navigator.pushNamed(context, '/notification');
+                  if (!mounted) return;
+                  setState(() {});
+                },
+                icon: const Icon(Icons.notifications_none),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/orders'),
+                icon: const Icon(Icons.receipt_long),
+              ),
+              const SizedBox(width: 48), // space for FAB
+              Builder(
+                builder: (ctx) {
+                  final unreadMessages = ProfileImages.chatUsers.fold<int>(0, (sum, u) {
+                    final v = u['unread'];
+                    if (v == null) return sum;
+                    return sum + (int.tryParse(v) ?? 0);
+                  });
+                  return Stack(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.pushNamed(context, '/message'),
+                        icon: const Icon(Icons.message_outlined),
+                      ),
+                      if (unreadMessages > 0)
+                        Positioned(
+                          right: 6,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                                color: Colors.red, shape: BoxShape.circle),
+                            child: Text(
+                              unreadMessages.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/profile'),
+                icon: const Icon(Icons.person_outline),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.percent),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: '',
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -276,7 +303,7 @@ class OrderCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 0.4,
+      elevation: 0.6,
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -289,7 +316,7 @@ class OrderCard extends StatelessWidget {
               children: [
                 Text(
                   "Order ID $orderId",
-                  style: const TextStyle(
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -374,7 +401,7 @@ class OrderItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Row(
