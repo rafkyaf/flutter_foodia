@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../message/message_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../notification/notification_screen.dart';
 import '../../profile/customer_profile_screen.dart';
+import '../../admin/admin_orders_screen.dart';
 
 class MainMenuDialog extends StatefulWidget {
   const MainMenuDialog({super.key});
@@ -74,69 +77,101 @@ class _MainMenuDialogState extends State<MainMenuDialog> {
         ),
         child: Column(
           children: [
-            // Header with avatar and name
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[300]!, width: 2),
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        'https://example.com/henry.jpg',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => CircleAvatar(
-                          backgroundColor: Colors.grey[200],
-                          child: Text(
-                            'HD',
-                            style: TextStyle(
-                              color: Colors.grey[800],
-                              fontWeight: FontWeight.w600,
+            // Header with avatar and name (tappable)
+            Builder(builder: (context) {
+              final user = Provider.of<AuthProvider>(context, listen: false).user;
+              String displayName = 'Foodia Admin';
+              if (user != null) {
+                displayName = (user['name'] ?? user['full_name'] ?? user['username'] ?? user['email'] ?? displayName).toString();
+              }
+              bool isAdminRole = false;
+              if (user != null) {
+                final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+                final r = roleVal?.toString().toLowerCase();
+                if (r == 'admin' || r == 'restaurant' || r == 'true') {
+                  isAdminRole = true;
+                } else {
+                  final rvnum = int.tryParse(r ?? '');
+                  if (rvnum != null && rvnum != 1) isAdminRole = true;
+                }
+              }
+
+              return InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  if (isAdminRole) {
+                    Navigator.pushNamed(context, '/admin/orders');
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CustomerProfileScreen()),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.grey[300]!, width: 2),
+                        ),
+                        child: ClipOval(
+                          child: Image.network(
+                            'https://example.com/henry.jpg',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => CircleAvatar(
+                              backgroundColor: Colors.grey[200],
+                              child: Text(
+                                displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
+                                style: TextStyle(
+                                  color: Colors.grey[800],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Henry Decosta',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Good Morning',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Good Morning',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                      const Spacer(),
+                      // Theme toggle button
+                      IconButton(
+                        icon: const Icon(Icons.dark_mode_outlined),
+                        onPressed: () {
+                          setState(() {
+                            _isDarkMode = !_isDarkMode;
+                          });
+                        },
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  // Theme toggle button
-                  IconButton(
-                    icon: const Icon(Icons.dark_mode_outlined),
-                    onPressed: () {
-                      setState(() {
-                        _isDarkMode = !_isDarkMode;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            }),
             const Divider(height: 40),
             // Menu Items
             Expanded(
@@ -199,6 +234,34 @@ class _MainMenuDialogState extends State<MainMenuDialog> {
                       );
                     },
                   ),
+                  // Show admin menu only for admin/restaurant users
+                  Builder(builder: (context) {
+                    final user = Provider.of<AuthProvider>(context, listen: false).user;
+                    bool isAdminRole = false;
+                    if (user != null) {
+                      final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+                      final r = roleVal?.toString().toLowerCase();
+                      if (r == 'admin' || r == 'restaurant' || r == 'true') {
+                        isAdminRole = true;
+                      } else {
+                        final rvnum = int.tryParse(r ?? '');
+                        if (rvnum != null && rvnum != 1) isAdminRole = true;
+                      }
+                    }
+
+                    if (!isAdminRole) return const SizedBox.shrink();
+
+                    return _buildMenuItem(
+                      icon: Icons.list_alt,
+                      color: Colors.teal[100]!,
+                      iconColor: Colors.teal,
+                      title: 'Admin Orders',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/admin/orders');
+                      },
+                    );
+                  }),
                   _buildMenuItem(
                     icon: Icons.chat_bubble_outline,
                     color: Colors.pink[100]!,
@@ -219,8 +282,10 @@ class _MainMenuDialogState extends State<MainMenuDialog> {
                     iconColor: Colors.grey[700]!,
                     title: 'Logout',
                     onTap: () {
-                      // Handle logout
+                      // Handle logout: clear auth state and go to login
                       Navigator.pop(context);
+                      Provider.of<AuthProvider>(context, listen: false).logout();
+                      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
                     },
                   ),
                   const Divider(height: 40),

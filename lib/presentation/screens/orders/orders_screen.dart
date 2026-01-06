@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/order_provider.dart';
 import '../../../providers/cart_provider.dart';
 import '../../../core/constants/profile_images.dart';
@@ -42,7 +43,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined,
                     color: Colors.black87),
-                onPressed: () => Navigator.pushNamed(context, '/cart'),
+                onPressed: () {
+                  final user = Provider.of<AuthProvider>(context, listen: false).user;
+                  bool isAdminRole = false;
+                  if (user != null) {
+                    final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+                    final r = roleVal?.toString().toLowerCase();
+                    if (r == 'admin' || r == 'restaurant' || r == 'true') {
+                      isAdminRole = true;
+                    } else {
+                      final rvnum = int.tryParse(r ?? '');
+                      if (rvnum != null && rvnum != 1) isAdminRole = true;
+                    }
+                  }
+                  if (isAdminRole) {
+                    Navigator.pushNamed(context, '/admin/orders');
+                  } else {
+                    Navigator.pushNamed(context, '/cart');
+                  }
+                },
               ),
               if (cartCount > 0)
                 Positioned(

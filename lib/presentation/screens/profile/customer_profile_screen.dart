@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/auth_provider.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -11,6 +13,17 @@ class CustomerProfileScreen extends StatefulWidget {
 class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+    final user = auth.user;
+    final displayName = user != null ? (user['name'] ?? user['full_name'] ?? user['email'] ?? 'User') : 'Guest';
+    final email = user != null ? (user['email'] ?? '') : '';
+    bool isAdmin = false;
+    if (user != null) {
+      final r = user['role'] ?? user['role_name'] ?? user['type'];
+      if (r is String && r.toLowerCase().contains('admin')) isAdmin = true;
+      if (user['isAdmin'] == true || user['is_admin'] == true) isAdmin = true;
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -67,24 +80,35 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                           ),
                         ),
                         child: ClipOval(
-                          child: Image.network(
-                            'https://example.com/profile.jpg', // Replace with actual image URL
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return CircleAvatar(
-                                radius: 48,
-                                backgroundColor: Colors.grey[200],
-                                child: Text(
-                                  'JH',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey[800],
+                          child: user != null && (user['avatar'] != null && user['avatar'].toString().isNotEmpty)
+                              ? Image.network(
+                                  user['avatar'],
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => CircleAvatar(
+                                    radius: 48,
+                                    backgroundColor: Colors.grey[200],
+                                    child: Text(
+                                      displayName.split(' ').map((s) => s.isNotEmpty ? s[0] : '').take(2).join().toUpperCase(),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : CircleAvatar(
+                                  radius: 48,
+                                  backgroundColor: Colors.grey[200],
+                                  child: Text(
+                                    displayName.split(' ').map((s) => s.isNotEmpty ? s[0] : '').take(2).join().toUpperCase(),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[800],
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
                         ),
                       ),
                       Positioned(
@@ -111,7 +135,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'James Hawkins',
+                    displayName,
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
@@ -119,10 +143,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'GOLD MEMBER',
+                    isAdmin ? 'ADMIN' : 'GOLD MEMBER',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: const Color(0xFFFFD700),
+                      color: isAdmin ? Colors.redAccent : const Color(0xFFFFD700),
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1,
                     ),
@@ -168,19 +192,19 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   _buildContactItem(
                     icon: Icons.phone,
                     title: 'Mobile Phone',
-                    value: '+12 345 678 92',
+                    value: user != null ? (user['phone'] ?? user['mobile'] ?? '+12 345 678 92') : '+12 345 678 92',
                   ),
                   const SizedBox(height: 16),
                   _buildContactItem(
                     icon: Icons.email_outlined,
                     title: 'Email Address',
-                    value: 'jameshawkins@mail.com',
+                    value: email.isNotEmpty ? email : 'not-set@example.com',
                   ),
                   const SizedBox(height: 16),
                   _buildContactItem(
                     icon: Icons.location_on_outlined,
                     title: 'Address',
-                    value: 'Franklin Avenue, Corner St.London, 24125151',
+                    value: user != null ? (user['address'] ?? 'Not set') : 'Not set',
                   ),
                 ],
               ),

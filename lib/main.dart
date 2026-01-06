@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'presentation/screens/auth/role_selection_screen.dart';
 import 'presentation/screens/customer/cart/cart_screen.dart';
 import 'presentation/screens/payment/payment_screen.dart';
+import 'presentation/screens/admin/admin_orders_screen.dart';
 
 // Core & Navigation
 import 'core/theme/app_theme.dart';
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/cart': (_) => const CartScreen(),
           '/payment': (_) => const PaymentScreen(),
+          '/admin/orders': (_) => const AdminOrdersScreen(),
         },
 
         // route awal (misalnya splash screen)

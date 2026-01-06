@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'login_screen.dart'; // ✅ Import halaman login
+import '../admin/admin_orders_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -89,7 +90,7 @@ class RoleSelectionScreen extends StatelessWidget {
                     role: 'RESTAURANT',
                     description: 'Serve great food faster here.',
                     onTap: () {
-                      // ✅ Arahkan ke halaman login juga
+                      // Buka halaman login terlebih dahulu untuk restaurant
                       Navigator.push(
                         context,
                         MaterialPageRoute(

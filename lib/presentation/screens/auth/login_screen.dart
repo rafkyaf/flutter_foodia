@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import 'signup_screen.dart';
 import 'forgot_password_phone_screen.dart';
 import '../../navigation/custom_page_route.dart';
 import '../home/home_screen.dart';
+import '../restaurant/orders/restaurant_orders_screen.dart';
+import '../admin/admin_orders_screen.dart';
+import '../../../providers/auth_provider.dart';
 
 void main() {
   runApp(const FoodiaApp());
@@ -26,7 +30,8 @@ class FoodiaApp extends StatelessWidget {
 }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? selectedRole;
+  const LoginScreen({super.key, this.selectedRole});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -35,6 +40,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _keepSignIn = true;
+  bool _isLoading = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -242,15 +248,62 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Langsung ke home dan hapus semua route sebelumnya
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        },
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                final email = _nameController.text.trim();
+                                final password = _passwordController.text;
+                                if (email.isEmpty || password.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text('Please enter email and password')));
+                                  return;
+                                }
+
+                                setState(() => _isLoading = true);
+                                try {
+                                    await Provider.of<AuthProvider>(context, listen: false)
+                                      .login(email, password, keepSignedIn: _keepSignIn);
+                                  if (!context.mounted) return;
+                                  final user = Provider.of<AuthProvider>(context, listen: false).user;
+                                  String role = '';
+                                  if (user != null) {
+                                    role = (user['role'] ?? user['type'] ?? user['role_name'] ?? '').toString().toLowerCase();
+                                  }
+
+                                  if (role == 'restaurant') {
+                                    if (!context.mounted) return;
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => const RestaurantOrdersScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  } else if (role == 'admin') {
+                                    if (!context.mounted) return;
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => const AdminOrdersScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  } else {
+                                    if (!context.mounted) return;
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => const HomeScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())),
+                                  );
+                                } finally {
+                                  if (mounted) setState(() => _isLoading = false);
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4DB8E8),
                           shape: RoundedRectangleBorder(
@@ -258,15 +311,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'SIGN IN',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'SIGN IN',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -284,10 +339,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   _keepSignIn = value ?? false;
                                 });
                               },
-                              fillColor: WidgetStateProperty.all(const Color(0xFF4DB8E8)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
                             ),
                             const SizedBox(width: 8),
                             Text(

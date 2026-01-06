@@ -31,6 +31,7 @@ dependencies:
   # Maps: OpenStreetMap via flutter_map (cross-platform) and LatLng helper
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  sliding_up_panel: ^2.0.0
   http: ^1.6.0
 
   # Google Maps (mobile-only; optional)

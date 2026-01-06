@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/auth_provider.dart';
 
 import '../customer/customer_home_screen.dart';
 import '../orders/orders_screen.dart';
@@ -66,6 +68,26 @@ class PagesScreen extends StatelessWidget {
         return;
       }
 
+      // Special-case: if navigating to cart, route admin/restaurant users to admin orders
+      if (route == '/cart') {
+        final user = Provider.of<AuthProvider>(context, listen: false).user;
+        bool isAdminRole = false;
+        if (user != null) {
+          final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+          final r = roleVal?.toString().toLowerCase();
+          if (r == 'admin' || r == 'restaurant' || r == 'true') {
+            isAdminRole = true;
+          } else {
+            final rvnum = int.tryParse(r ?? '');
+            if (rvnum != null && rvnum != 1) isAdminRole = true;
+          }
+        }
+        if (isAdminRole) {
+          Navigator.pushNamed(context, '/admin/orders');
+          return;
+        }
+      }
+
       Navigator.pushNamed(context, route);
       return;
     }
@@ -105,12 +127,19 @@ class PagesScreen extends StatelessWidget {
             separatorBuilder: (context, index) => const Divider(height: 8, thickness: 1, color: Color(0xFFF0F0F0)),
             itemBuilder: (context, index) {
               final item = _items[index];
+              final auth = Provider.of<AuthProvider>(context);
+              String titleText = item['title'] as String;
+              if ((item['route'] as String?) == '/profile') {
+                if (auth.user != null) {
+                  titleText = auth.user!['name'] ?? auth.user!['full_name'] ?? auth.user!['email'] ?? 'Profile';
+                }
+              }
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: const Color(0xFFF6F8FA),
                   child: Icon(item['icon'] as IconData, color: const Color(0xFF6B7280), size: 20),
                 ),
-                title: Text(item['title'] as String, style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(titleText, style: const TextStyle(fontWeight: FontWeight.w600)),
                 trailing: const Icon(Icons.chevron_right, color: Color(0xFF9AA0AA)),
                 onTap: () => _open(context, item),
               );

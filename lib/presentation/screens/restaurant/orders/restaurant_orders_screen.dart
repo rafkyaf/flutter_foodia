@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 class RestaurantOrdersScreen extends StatefulWidget {
   const RestaurantOrdersScreen({super.key});
@@ -10,58 +13,16 @@ class RestaurantOrdersScreen extends StatefulWidget {
 
 class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
   String selectedTab = "On Delivery";
+  List<Map<String, dynamic>> orders = [];
+  List<Map<String, dynamic>> notifications = [];
+  bool loading = false;
+  final int adminId = 2; // for demo; replace with auth session value
+  final String apiBase = 'http://localhost'; // adjust if needed
 
   @override
   Widget build(BuildContext context) {
-    final orders = [
-      {
-        'id': '#0012345',
-        'status': 'ON DELIVERY',
-        'items': [
-          {
-            'name': 'Coffee Mocha / White Mocha',
-            'image': 'https://i.imgur.com/hxS5v2Z.png',
-            'price': 5.0,
-            'oldPrice': 8.9,
-            'qty': 2
-          },
-          {
-            'name': 'Chicken Wings Spicy',
-            'image': 'https://i.imgur.com/RmXyoGp.png',
-            'price': 5.0,
-            'oldPrice': 8.9,
-            'qty': 2
-          }
-        ],
-      },
-      {
-        'id': '#0012345',
-        'status': 'DONE',
-        'items': [
-          {
-            'name': 'Vanilla Sweet Cream Cold',
-            'image': 'https://i.imgur.com/DxtqENh.png',
-            'price': 5.0,
-            'oldPrice': 8.9,
-            'qty': 2
-          },
-          {
-            'name': 'Mily Cream Ice Coffee',
-            'image': 'https://i.imgur.com/p3A0rK3.png',
-            'price': 5.0,
-            'oldPrice': 8.9,
-            'qty': 2
-          },
-          {
-            'name': 'Deluxe Burger Spicy',
-            'image': 'https://i.imgur.com/IlJmQEU.png',
-            'price': 5.0,
-            'oldPrice': 8.9,
-            'qty': 2
-          },
-        ],
-      },
-    ];
+    // use fetched orders if available, otherwise empty list
+    final displayOrders = orders.isNotEmpty ? orders : [];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -76,31 +37,39 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
             )),
         centerTitle: false,
         actions: [
+          // Notifications button
           Stack(
             alignment: Alignment.topRight,
             children: [
               IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.shopping_cart_outlined,
-                      color: Colors.black)),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                      color: Colors.red, shape: BoxShape.circle),
-                  child: const Text(
-                    '5',
-                    style: TextStyle(fontSize: 10, color: Colors.white),
+                onPressed: () async {
+                  await fetchNotifications();
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (_) => buildNotificationsSheet(),
+                  );
+                },
+                icon: const Icon(Icons.notifications_none, color: Colors.black),
+              ),
+              if (notifications.isNotEmpty)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                        color: Colors.red, shape: BoxShape.circle),
+                    child: Text(
+                      notifications.length.toString(),
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                    ),
                   ),
-                ),
-              )
+                )
             ],
           ),
           IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.filter_list, color: Colors.black)),
+              onPressed: () async { await fetchOrders(); },
+              icon: const Icon(Icons.refresh, color: Colors.black)),
         ],
       ),
       body: Column(
@@ -152,11 +121,13 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
 
           // Order List
           Expanded(
-            child: ListView.builder(
-              itemCount: orders.length,
-              padding: const EdgeInsets.only(bottom: 16),
-              itemBuilder: (context, index) {
-                final order = orders[index];
+            child: loading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: displayOrders.length,
+                    padding: const EdgeInsets.only(bottom: 16),
+                    itemBuilder: (context, index) {
+                      final order = displayOrders[index];
                 return Container(
                   margin:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -222,9 +193,32 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
 
                         const SizedBox(height: 8),
 
+                        // Payment status and actions (admin)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Payment: ${order['payment_status'] ?? 'pending'}',
+                                style: GoogleFonts.poppins(
+                                    color: order['payment_status'] == 'paid'
+                                        ? Colors.green
+                                        : Colors.orange,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              if (order['payment_status'] == 'paid')
+                                ElevatedButton(
+                                  onPressed: () => verifyOrder(order['id'].toString()),
+                                  child: const Text('Verify & Queue'),
+                                ),
+                            ],
+                          ),
+                        ),
+
                         // Item list
                         Column(
-                          children: (order['items'] as List).map((item) {
+                          children: getOrderItems(order).map((item) {
                             return Padding(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 8.0),
@@ -289,6 +283,107 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOrders();
+    fetchNotifications();
+  }
+
+  Future<void> fetchOrders() async {
+    setState(() => loading = true);
+    try {
+      final res = await http.get(Uri.parse('$apiBase/api/orders.php'));
+      if (res.statusCode == 200) {
+        final j = jsonDecode(res.body);
+        if (j['success'] == true && j['data'] is List) {
+          setState(() {
+            orders = List<Map<String, dynamic>>.from(j['data']);
+          });
+        }
+      }
+    } catch (e) {
+      // ignore network errors; keep mock/empty state
+    } finally {
+      setState(() => loading = false);
+    }
+  }
+
+  Future<void> fetchNotifications() async {
+    try {
+      final res = await http.get(Uri.parse('$apiBase/api/notifications.php?admin_id=$adminId'));
+      if (res.statusCode == 200) {
+        final j = jsonDecode(res.body);
+        if (j['success'] == true && j['data'] is List) {
+          setState(() {
+            notifications = List<Map<String, dynamic>>.from(j['data']);
+          });
+        }
+      }
+    } catch (e) {}
+  }
+
+  List getOrderItems(Map<String, dynamic> order) {
+    try {
+      if (order['payload'] != null) {
+        final pl = order['payload'];
+        if (pl is String) {
+          final dec = jsonDecode(pl);
+          if (dec is Map && dec['items'] != null) return dec['items'];
+          if (dec is List) return dec;
+        } else if (pl is Map && pl['items'] != null) return pl['items'];
+      }
+      if (order['items'] != null) return order['items'];
+    } catch (e) {}
+    return [];
+  }
+
+  Future<void> verifyOrder(String orderId) async {
+    final uri = Uri.parse('$apiBase/api/orders.php?action=verify');
+    try {
+      final res = await http.post(uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'order_id': orderId, 'admin_id': adminId}));
+      final j = jsonDecode(res.body);
+      if (res.statusCode == 200 && j['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order verified')));
+        await fetchOrders();
+        await fetchNotifications();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Verify failed: ${j['message'] ?? 'error'}')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error')));
+    }
+  }
+
+  Widget buildNotificationsSheet() {
+    return SizedBox(
+      height: 320,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Text('Notifications', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+          ),
+          const Divider(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: notifications.length,
+              itemBuilder: (context, i) {
+                final n = notifications[i];
+                return ListTile(
+                  title: Text(n['type'] ?? 'notification', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                  subtitle: Text(n['message'] ?? '', style: GoogleFonts.poppins()),
+                );
+              },
+            ),
+          )
         ],
       ),
     );

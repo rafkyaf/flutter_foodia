@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 // Import semua screen yang akan digunakan dalam routing
 import '../screens/auth/role_selection_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../screens/splash_screen.dart';
 import '../screens/carousel_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -40,7 +42,14 @@ class AppRouter {
 
       case '/home':
         return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
+          builder: (context) {
+            final auth = Provider.of<AuthProvider>(context, listen: false);
+            if (!auth.loggedIn) {
+              // If user is not authenticated, redirect to role/login flow
+              return const RoleSelectionScreen();
+            }
+            return const HomeScreen();
+          },
           settings: settings,
         );
 

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/product_provider.dart';
 import '../../../providers/cart_provider.dart';
 import '../../../providers/order_provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../widgets/bottom_nav_screen.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/order_model.dart';
@@ -40,6 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
     final products = productProvider.products;
+    final auth = context.watch<AuthProvider>();
+    String displayName = 'Guest';
+    if (auth.user != null) {
+      displayName = auth.user!['name'] ?? auth.user!['full_name'] ?? auth.user!['email'] ?? 'User';
+    }
 
     return Theme(
       data: _isDarkMode ? AppTheme.darkTheme : Theme.of(context),
@@ -64,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               Text(
-                userName,
+                displayName,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -75,7 +81,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: [
             IconButton(
-              onPressed: () => Navigator.pushNamed(context, '/cart'),
+              onPressed: () {
+                final user = Provider.of<AuthProvider>(context, listen: false).user;
+                bool isAdminRole = false;
+                if (user != null) {
+                  final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+                  final r = roleVal?.toString().toLowerCase();
+                  if (r == 'admin' || r == 'restaurant' || r == 'true') {
+                    isAdminRole = true;
+                  } else {
+                    final rvnum = int.tryParse(r ?? '');
+                    if (rvnum != null && rvnum != 1) isAdminRole = true;
+                  }
+                }
+                if (isAdminRole) {
+                  Navigator.pushNamed(context, '/admin/orders');
+                } else {
+                  Navigator.pushNamed(context, '/cart');
+                }
+              },
               icon: Icon(Icons.shopping_cart_outlined, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54),
             ),
             IconButton(onPressed: () => Navigator.pushNamed(context, '/profile'), icon: Icon(Icons.person_outline, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)),
@@ -344,31 +368,34 @@ class _HomeScreenState extends State<HomeScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
           final category = categories[index];
-          return Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: (category['color'] as Color?) ?? Colors.blue,
-                  borderRadius: BorderRadius.circular(16),
+          return GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/product'),
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: (category['color'] as Color?) ?? Colors.blue,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  width: 60,
+                  height: 60,
+                  child: Icon(
+                    category['icon'] as IconData,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
-                width: 60,
-                height: 60,
-                child: Icon(
-                  category['icon'] as IconData,
-                  color: Colors.white,
-                  size: 30,
+                const SizedBox(height: 8),
+                Text(
+                  category['title'] as String,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                category['title'] as String,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -607,7 +634,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                   duration: const Duration(seconds: 2),
                                   action: SnackBarAction(
                                     label: 'View Cart',
-                                    onPressed: () => Navigator.pushNamed(context, '/cart'),
+                                    onPressed: () {
+                                      final user = Provider.of<AuthProvider>(context, listen: false).user;
+                                      bool isAdminRole = false;
+                                      if (user != null) {
+                                        final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+                                        final r = roleVal?.toString().toLowerCase();
+                                        if (r == 'admin' || r == 'restaurant' || r == 'true') {
+                                          isAdminRole = true;
+                                        } else {
+                                          final rvnum = int.tryParse(r ?? '');
+                                          if (rvnum != null && rvnum != 1) isAdminRole = true;
+                                        }
+                                      }
+                                      if (isAdminRole) {
+                                        Navigator.pushNamed(context, '/admin/orders');
+                                      } else {
+                                        Navigator.pushNamed(context, '/cart');
+                                      }
+                                    },
                                   ),
                                 ),
                               );
@@ -651,7 +696,25 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               icon: Icon(Icons.notifications_none, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54),
             ),
-            IconButton(onPressed: () => Navigator.pushNamed(context, '/orders'), icon: Icon(Icons.receipt_long, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)),
+            IconButton(onPressed: () {
+                final user = Provider.of<AuthProvider>(context, listen: false).user;
+                bool isAdminRole = false;
+                if (user != null) {
+                  final roleVal = user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin'] ?? user['role_id'];
+                  final r = roleVal?.toString().toLowerCase();
+                  if (r == 'admin' || r == 'restaurant' || r == 'true') {
+                    isAdminRole = true;
+                  } else {
+                    final rvnum = int.tryParse(r ?? '');
+                    if (rvnum != null && rvnum != 1) isAdminRole = true;
+                  }
+                }
+                if (isAdminRole) {
+                  Navigator.pushNamed(context, '/admin/orders');
+                } else {
+                  Navigator.pushNamed(context, '/orders');
+                }
+              }, icon: Icon(Icons.receipt_long, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54)),
             const SizedBox(width: 48), // space for FAB
             // Message icon with unread count
             Builder(builder: (ctx) {
@@ -684,6 +747,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawer() {
+    final auth = Provider.of<AuthProvider>(context);
+    String displayName = 'Guest';
+    if (auth.user != null) {
+      displayName = auth.user!['name'] ?? auth.user!['full_name'] ?? auth.user!['email'] ?? 'User';
+    }
     Widget iconCircle(IconData icon, Color bg) => Container(
           width: 40,
           height: 40,
@@ -757,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const Text('Good Morning', style: TextStyle(color: Colors.white)),
                         const SizedBox(height: 4),
-                        Text(userName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(displayName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                       ],
                     ),
                   ),
@@ -814,7 +882,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     ListTile(
                       leading: iconCircle(Icons.person_outline, Colors.teal),
-                      title: const Text('Profile'),
+                      title: Text(auth.user != null ? (auth.user!['name'] ?? auth.user!['email'] ?? 'Profile') : 'Profile'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/profile'),
                     ),
@@ -830,14 +898,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.pushNamed(context, '/cart');
+                        final user = Provider.of<AuthProvider>(context, listen: false).user;
+                        bool isAdminRole = false;
+                        if (user != null) {
+                          final r = (user['role'] ?? user['type'] ?? user['role_name'] ?? user['is_admin'] ?? user['isAdmin']).toString().toLowerCase();
+                          if (r == 'admin' || r == 'restaurant' || r == '1' || r == 'true') isAdminRole = true;
+                        }
+                        if (isAdminRole) {
+                          Navigator.pushNamed(context, '/admin/orders');
+                        } else {
+                          Navigator.pushNamed(context, '/cart');
+                        }
                       },
                     ),
                     ListTile(
                       leading: iconCircle(Icons.logout, Colors.redAccent),
                       title: const Text('Logout'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Confirm logout'),
+                            content: const Text('Are you sure you want to logout?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+                              TextButton(
+                                onPressed: () async {
+                                  Navigator.of(ctx).pop();
+                                  Provider.of<AuthProvider>(context, listen: false).logout();
+                                  Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false);
+                                },
+                                child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

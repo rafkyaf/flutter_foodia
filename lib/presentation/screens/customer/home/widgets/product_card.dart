@@ -19,8 +19,7 @@ class HomeProductCard extends StatelessWidget {
 				decoration: BoxDecoration(
 					color: Colors.white,
 					borderRadius: BorderRadius.circular(12),
-					// ignore: deprecated_member_use
-					boxShadow: [BoxShadow(color: Colors.grey.withAlpha((0.06 * 255).round()), blurRadius: 6, offset: const Offset(0, 2))],
+					boxShadow: [BoxShadow(color: Colors.black.withAlpha((0.06 * 255).round()), blurRadius: 6, offset: const Offset(0, 2))],
 				),
 				child: Row(
 					children: [
@@ -38,15 +37,15 @@ class HomeProductCard extends StatelessWidget {
 						const SizedBox(width: 12),
 						Expanded(
 							child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-								Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+								Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
 								const SizedBox(height: 8),
 								const Row(children: [Icon(Icons.star, size: 16, color: Colors.amber), SizedBox(width: 6), Text('4.6')]),
 							]),
 						),
 						Container(
 							padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-							decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(16)),
-							child: Text('\$${product.price.toStringAsFixed(1)}', style: const TextStyle(color: Colors.blue)),
+							decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0,1))]),
+							child: Text('\$${product.price.toStringAsFixed(1)}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
 						),
 					],
 				),
@@ -61,8 +60,8 @@ class HomeProductCard extends StatelessWidget {
 				padding: const EdgeInsets.all(16.0),
 				child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
 					Row(children: [
-						Expanded(child: Text(p.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
-						Text('\$${p.price.toStringAsFixed(1)}', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+						Expanded(child: Text(p.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87))),
+						Text('\$${p.price.toStringAsFixed(1)}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
 					]),
 					const SizedBox(height: 12),
 					Text(p.description, style: const TextStyle(color: Colors.black54)),
